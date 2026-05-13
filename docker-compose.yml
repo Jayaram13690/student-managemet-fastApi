@@ -2,8 +2,9 @@ version: "3.9"
 
 services:
 
+  # ── FastAPI Backend ──────────────────────────────────────
   app:
-    build: .
+    build: ./backend
     container_name: fastapi_app
 
     ports:
@@ -13,10 +14,11 @@ services:
       - db
 
     volumes:
-      - .:/app
+      - ./backend:/app
 
     restart: always
 
+  # ── MySQL Database ───────────────────────────────────────
   db:
     image: mysql:8.0
     container_name: mysql_db
@@ -27,5 +29,18 @@ services:
 
     ports:
       - "3307:3306"
+
+    restart: always
+
+  # ── React Frontend (Nginx) ───────────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: react_frontend
+
+    ports:
+      - "3000:80"
+
+    depends_on:
+      - app
 
     restart: always
