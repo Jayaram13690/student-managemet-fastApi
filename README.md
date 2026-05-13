@@ -1,140 +1,118 @@
-# FastAPI MySQL CRUD Application Documentation
+# Fullstack Student Management Application
 
 ## Overview
-This application is a FastAPI-based CRUD (Create, Read, Update, Delete) service for managing student records stored in a MySQL database. It uses Docker for containerization and provides RESTful endpoints for student management.
+This application is a complete fullstack CRUD (Create, Read, Update, Delete) system for managing student records. It features a **React** frontend (built with Vite), a **FastAPI** backend, and a **MySQL** database. The entire application is containerized using **Docker** and **Docker Compose**, providing a seamless development and deployment experience.
 
 ## Project Structure
 ```
 .
-├── database/
-│   ├── connection.py
-│   ├── model.py
-│   └── __init__.py
-├── routers/
-│   └── student_router.py
-├── schemas/
-│   └── student_schema.py
-├── services/
-│   └── student_service.py
-├── main.py
-├── .env
-├── .gitignore
-├── Documentation.md
-├── Dockerfile
-├── docker-compose.yml
-└── requirements.txt
+├── backend/                  # FastAPI Application
+│   ├── database/
+│   │   ├── connection.py
+│   │   ├── model.py
+│   │   └── __init__.py
+│   ├── routers/
+│   │   └── student_router.py
+│   ├── schemas/
+│   │   └── student_schema.py
+│   ├── services/
+│   │   └── student_service.py
+│   ├── main.py
+│   ├── Dockerfile            # Python 3.11 image
+│   └── requirements.txt
+├── frontend/                 # React (Vite) Application
+│   ├── src/
+│   │   ├── api.js            # API integration layer
+│   │   ├── components/       # UI Components (Cards, Modals, etc.)
+│   │   ├── hooks/            # Custom React hooks (useStudents, useToast)
+│   │   ├── App.jsx           # Main Application Component
+│   │   ├── index.css         # Styling
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── nginx.conf            # Nginx config for serving the SPA
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── Dockerfile            # Multi-stage build (Node + Nginx)
+│   └── .dockerignore
+├── .env                      # Environment variables
+├── docker-compose.yml        # Multi-container orchestration
+└── README.md
 ```
 
-## Components
+## System Architecture
 
-### 1. `main.py`
-- FastAPI application entry point
-- Configures CORS middleware
-- Includes student router
-- Handles database connection and table creation on startup
+The application is deployed across 3 Docker containers:
 
-### 2. `database/connection.py`
-- Database connection configuration
-- Creates SQLAlchemy engine for MySQL
-- Configures session factory
-- Provides database session dependency
+1. **`react_frontend` (Port 3000)**: Serves the built React SPA using an Nginx web server. Includes routing fallback for single-page applications.
+2. **`fastapi_app` (Port 8000)**: Provides the REST API endpoints. Configured with CORS to accept requests from the frontend.
+3. **`mysql_db` (Port 3307)**: Persists student data. Uses MySQL 8.0.
 
-### 3. `database/model.py`
-- Defines SQLAlchemy ORM model for Student
-- Maps to "students" table with columns: id, name, age, course
-
-### 4. `schemas/student_schema.py`
-- Pydantic models for request/response validation
-- `StudentCreate`: Input schema for creating/updating students
-- `StudentResponse`: Output schema including ID
-
-### 5. `services/student_service.py`
-- Business logic layer
-- Functions for CRUD operations:
-  - `create_student()`: Add new student
-  - `get_students()`: Retrieve all students
-  - `get_student()`: Retrieve single student by ID
-  - `update_student()`: Update existing student
-  - `delete_student()`: Delete student by ID
-  - `filter_students()`: Filter students by course and/or minimum age
-
-### 6. `routers/student_router.py`
-- FastAPI router defining API endpoints:
-  - `POST /students`: Create new student
-  - `GET /students`: Get all students
-  - `GET /students/{student_id}`: Get specific student
-  - `PUT /students/{student_id}`: Update student
-  - `DELETE /students/{student_id}`: Delete student
-  - `GET /filter`: Filter students by course/min_age
-
-### 7. `Dockerfile`
-- Container configuration
-- Uses Python 3.11 base image
-- Installs dependencies from requirements.txt
-- Exposes port 8000
-- Runs Uvicorn server
-
-### 8. `docker-compose.yml`
-- Orchestrates multi-container setup
-- Defines two services:
-  - `app`: FastAPI application
-  - `db`: MySQL 8.0 database
-- Configures network and dependencies
-
-### 9. `requirements.txt`
-- Python dependencies:
-  - fastapi: Web framework
-  - uvicorn: ASGI server
-  - sqlalchemy: ORM
-  - pymysql: MySQL driver
-  - pydantic: Data validation
-  - cryptography: Security
-
-## API Endpoints
+## API Endpoints (Backend)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /students | Create new student |
-| GET | /students | Get all students |
-| GET | /students/{id} | Get student by ID |
-| PUT | /students/{id} | Update student |
-| DELETE | /students/{id} | Delete student |
-| GET | /filter | Filter students |
+| POST | `/students` | Create a new student |
+| GET | `/students` | Get all students |
+| GET | `/students/{id}` | Get student by ID |
+| PUT | `/students/{id}` | Update a student |
+| DELETE | `/students/{id}` | Delete a student |
+| GET | `/filter` | Filter students by course/min_age |
 
-## Setup and Running
+## How to Run the Application
 
-1. Build and start containers:
+The entire stack is managed via Docker Compose. Ensure you have Docker Desktop (or Docker Engine + Docker Compose) installed.
+
+### 1. Start Everything
+To build the images and start all three containers in the background:
 ```bash
-docker-compose up --build
+docker-compose up -d --build
+```
+*Note: The first run might take a minute or two to pull the base images and build the frontend.*
+
+### 2. Access the Application
+Once the containers are running, open your browser and navigate to:
+- **Frontend App**: [http://localhost:3000](http://localhost:3000)
+- **Backend API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### 3. Check Logs (Optional)
+If you want to see what's happening behind the scenes:
+```bash
+docker-compose logs -f           # All logs
+docker-compose logs -f frontend  # Only frontend logs
+docker-compose logs -f app       # Only backend logs
+docker-compose logs -f db        # Only database logs
 ```
 
-Stop Containers
+### 4. Stop the Application
+To stop the containers without losing your database data:
 ```bash
 docker-compose down
 ```
 
-Remove Containers + Volumes:
+To stop the containers **and** wipe the database volume (fresh start):
 ```bash
 docker-compose down -v
 ```
 
-2. Application will be available at: `http://localhost:8000`
+## Local Development (Without Docker for Frontend)
+If you are actively making changes to the React code and want hot-reloading:
 
-3. API documentation (Swagger UI): `http://localhost:8000/docs`
+1. Start only the backend and database via Docker:
+   ```bash
+   docker-compose up -d app db
+   ```
+2. Navigate to the frontend directory and start the Vite dev server:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+3. Access the live-reloading dev environment at [http://localhost:5173](http://localhost:5173).
 
-## Database Configuration
-
-- MySQL 8.0
-- Database: student_db
-
-## Run the application
-
-```bash 
-docker-compose up
-```
-
-## Error Handling
-
-- Returns 404 for non-existent student records
-- Automatic database connection retry on startup
-- Proper session management with try/finally blocks
+## Features
+- **Modern UI**: Dark glassmorphism theme, fully responsive, with skeleton loading screens.
+- **Client-side Validation**: Forms ensure data integrity before sending requests.
+- **Dynamic Filtering**: Instantly search by name/course and filter by age/course.
+- **Optimistic Updates**: Immediate UI updates when adding, editing, or deleting.
+- **Toast Notifications**: Built-in, non-intrusive feedback on all operations.
+- **Resilient Backend**: Automatic database connection retry on startup.
